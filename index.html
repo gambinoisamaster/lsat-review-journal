@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LSAT REVIEW JOURNAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Russo One & Saira = sporty headers; Saira Condensed = filter buttons/dropdowns; Press Start 2P = scoreboard;
+     Jersey 15 (pixel-sporty) = Question Type cells; VT323 (retro terminal) = Stimulus Type cells;
+     Share Tech Mono (coding/terminal) = long free-text cells -->
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Saira+Condensed:wght@500;600;700;800&family=Baloo+2:wght@600;700;800&family=Press+Start+2P&family=Jersey+15&family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#C8102E; --red-d:#8a0a1f; --blue:#1A2F8F; --blue-l:#2c47c4; --blue-d:#0e1a52;
+    --gold:#FFD200; --panel:#0A0A12; --orange:#FF6A00;
+    --green-sel:#1f9e2c; --green-sel-d:#0d5e17;
+    --teal:#19d3c5; --teal-d:#0b8f86; --pink:#ff5fa2; --pink-d:#c12c6f;
+    --purple:#a64bd6; --purple-d:#6a1f9c;
+    --txt:#eef2f8; --muted:#7a86a8;
+    /* Reason Missed row-cycling text colors */
+    --rm-green:#46e06a; --rm-red:#ff6b6b; --rm-blue:#6ba6ff;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:#04050a;overflow:hidden;font-family:'Saira Condensed',sans-serif;color:var(--txt);}
+  /* ---------- lo-fi / CRT overlays ---------- */
+  #crt{position:fixed;inset:0;z-index:9000;pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:multiply;}
+  #crt::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 100% 100% at 50% 50%, transparent 55%, rgba(0,0,0,0.5) 100%);}
+  #grid{position:fixed;inset:0;z-index:8999;pointer-events:none;opacity:.16;
+    background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+    background-size:3px 3px;}
+  #stage{position:fixed;inset:0;filter:contrast(1.06) saturate(1.16);}
+  .pix{image-rendering:pixelated;image-rendering:crisp-edges;}
+  .outline{text-shadow:1px 1px 0 #000,-1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000;}
+
+  /* ===================== SPLASH (16-bit) ===================== */
+  #splash{position:fixed;inset:0;z-index:7000;background:#0b1f0c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .6s ease;}
+  #splash.hide{opacity:0;pointer-events:none;}
+  #pitchWrap{width:760px;max-width:92vw;aspect-ratio:16/9;border:4px solid #0a3d0f;border-radius:4px;overflow:hidden;position:relative;}
+  #pitch{width:100%;height:100%;display:block;}
+  #board{width:760px;max-width:92vw;background:#070707;border:5px solid #1a1a1a;border-radius:8px;padding:16px 20px;
+    display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:0 26px;
+    box-shadow:inset 0 0 0 2px #000, 0 6px 14px rgba(0,0,0,.6);background-image:radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);background-size:4px 4px;}
+  .dot{font-family:'Press Start 2P',monospace;color:#ff8a1e;line-height:1.9;letter-spacing:1px;text-shadow:0 0 6px rgba(255,120,0,.55);}
+  #nameCol .dot{font-size:18px;}
+  #scoreCol{text-align:center;} #scoreCol .dot{font-size:30px;}
+  .vbar{width:4px;height:64px;background:repeating-linear-gradient(0deg,#ff8a1e 0 3px,transparent 3px 6px);opacity:.7;}
+  #timeCol .dot{font-size:18px;text-align:right;}
+  #firstUse{position:fixed;inset:0;z-index:7100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);}
+  #firstUse .card{background:#0c1322;border:3px solid var(--gold);border-radius:14px;padding:24px 28px;text-align:center;max-width:380px;box-shadow:inset 2px 2px 0 rgba(255,255,255,.25),inset -2px -2px 0 rgba(0,0,0,.6);}
+  #firstUse h3{font-family:'Russo One';color:var(--gold);margin:0 0 8px;letter-spacing:1px;}
+  #firstUse input{font-family:'Press Start 2P';font-size:20px;width:120px;text-align:center;padding:8px;background:#000;color:#ff8a1e;border:2px solid #333;border-radius:6px;}
+
+  /* ===================== MAIN APP ===================== */
+  #app{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;
+    background:radial-gradient(120% 90% at 50% -10%, #34456a 0%, transparent 55%),linear-gradient(180deg,#1b2740 0%, #0d1426 55%, #070b16 100%);}
+  #app.show{display:flex;}
+  .btn3{font-family:'Baloo 2';font-weight:800;font-size:14px;letter-spacing:.5px;color:#fff;padding:9px 18px;border-radius:999px;cursor:pointer;border:1px solid #050a18;white-space:nowrap;user-select:none;
+    box-shadow:inset 1px 1px 0 rgba(255,255,255,.4),inset -1px -2px 0 rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.5);}
+  .btn3.green{background:linear-gradient(180deg,#36b043,#0d5e17);}
+  .btn3.red{background:linear-gradient(180deg,var(--red),var(--red-d));}
+  .btn3.blue{background:linear-gradient(180deg,var(--blue-l),var(--blue-d));}
+  .btn3.pink{background:linear-gradient(180deg,var(--pink),var(--pink-d));}
+  .btn3.purple{background:linear-gradient(180deg,var(--purple),var(--purple-d));}
+  .btn3.grey{background:linear-gradient(180deg,#9aa3bd,#586079);color:#0a0c14;text-shadow:none;}
+
+  #topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 18px;background:linear-gradient(180deg,#2a3a5c 0%,#16203a 100%);border-bottom:3px solid rgba(0,0,0,.6);box-shadow:inset 0 2px 0 rgba(255,255,255,.18);}
+  .crest{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3d6fff,#0e1a52 70%);border:2px solid #aab4d6;display:flex;align-items:center;justify-content:center;font-family:'Russo One';font-size:12px;color:#fff;}
+  .readout{font-family:'Press Start 2P';font-size:11px;color:var(--gold);text-shadow:0 0 6px rgba(255,210,0,.4);}
+
+  #titleplate{display:flex;align-items:center;gap:14px;padding:12px 20px 6px;}
+  #titleplate .accent{height:28px;width:9px;border-radius:3px;background:linear-gradient(180deg,var(--red),var(--red-d));}
+  #titleplate .accent.b{background:linear-gradient(180deg,var(--blue-l),var(--blue-d));}
+  #titleplate h1{margin:0;font-family:'Russo One';font-size:30px;letter-spacing:2px;color:#fff;-webkit-text-stroke:1px #000;
+    text-shadow:0 2px 0 var(--red-d),0 3px 0 var(--blue-d),0 5px 8px rgba(0,0,0,.6);}
+  #medals{margin-left:14px;font-size:26px;line-height:1;letter-spacing:4px;display:inline-flex;align-items:center;
+    filter:drop-shadow(0 0 5px rgba(255,200,0,.55)) drop-shadow(1px 2px 0 rgba(0,0,0,.6));}
+  .medal{image-rendering:pixelated;}
+  #titleActions{margin-left:auto;display:flex;gap:10px;align-items:center;margin-top:9px;}
+  .btn3.maroon{background:linear-gradient(180deg,#b23a5c,#7B1B38);}
+
+  #filters{display:flex;flex-wrap:wrap;gap:10px;padding:6px 20px 12px;align-items:center;}
+  #filterLabel{font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);opacity:.85;margin-right:4px;user-select:none;align-self:center;}
+  /* Filter buttons & dropdowns: sporty stylized font (not the rounded "childish" look) */
+  .pill{font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:1px;text-transform:uppercase;color:#fff;padding:9px 16px;border-radius:999px;cursor:pointer;border:1px solid #050a18;white-space:nowrap;user-select:none;position:relative;
+    background:linear-gradient(180deg,#2c47c4 0%,#16216e 60%,#0e1850 100%);box-shadow:inset 1px 1px 0 rgba(255,255,255,.4),inset -1px -2px 0 rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.5);}
+  .pill .car{color:var(--gold);margin-left:8px;}
+  .pill.reset{background:linear-gradient(180deg,#9aa3bd,#586079);color:#0a0c14;text-shadow:none;}
+  .pill.bm.on{background:linear-gradient(180deg,#e23,#8a0a1f);}
+  .pill .count{background:var(--gold);color:#000;border-radius:999px;font-size:12px;padding:0 6px;margin-left:7px;font-family:'Russo One';}
+  /* New Entry Mode: interactive buttons turn teal */
+  body.nem .pill{background:linear-gradient(180deg,#0f3d3a,#072523);border-color:var(--teal);color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal),0 0 8px rgba(25,211,197,.4);}
+  body.nem .pill .car,body.nem .pill .count{color:var(--teal);background:transparent;}
+
+  #tableWrap{flex:1;overflow-y:auto;overflow-x:hidden;margin:0 16px 8px;border-radius:12px;background:linear-gradient(180deg,#0c1322 0%,#070b16 100%);border:2px solid #2a3656;
+    box-shadow:inset 2px 2px 0 rgba(255,255,255,.12),inset -2px -2px 0 rgba(0,0,0,.6),0 6px 16px rgba(0,0,0,.5);padding:0 0 8px;}
+  table{border-collapse:separate;border-spacing:0 7px;width:100%;table-layout:fixed;margin-top:-7px;}
+  /* header is ONE continuous bar flush to the table edges: cells touch, only outer ends rounded */
+  thead tr{}
+  thead th{position:sticky;top:0;z-index:5;font-family:'Russo One';font-size:10px;letter-spacing:.4px;color:#fff;padding:10px 7px;text-align:left;white-space:nowrap;
+    background:linear-gradient(180deg,var(--red) 0%,var(--red-d) 100%);border-top:1px solid rgba(255,255,255,.45);border-bottom:2px solid #4a0712;text-shadow:1px 1px 0 #000;}
+  thead th:first-child{border-top-left-radius:10px;border-bottom-left-radius:10px;}
+  thead th:last-child{border-top-right-radius:10px;border-bottom-right-radius:10px;}
+  thead th.bluehdr{background:linear-gradient(180deg,var(--blue-l) 0%,var(--blue-d) 100%);border-bottom-color:#091047;}
+  thead th.greenhdr{background:linear-gradient(180deg,var(--green-sel) 0%,var(--green-sel-d) 100%);border-bottom-color:#0a3d18;}
+  /* long-text column headers centered over their column */
+  thead th.cReason,thead th.cExp,thead th.cTake{text-align:center;}
+  /* column widths (%) — sum 100; 9 columns incl. Time; text columns wide for ~150 chars / 5 lines */
+  th.cQ,td.cQ{width:13%;} th.cType,td.cType{width:10%;} th.cStim,td.cStim{width:9%;}
+  th.cDiff,td.cDiff{width:6.5%;} th.cTime,td.cTime{width:9.5%;} th.cReason,td.cReason{width:16%;}
+  th.cExp,td.cExp{width:15%;} th.cTake,td.cTake{width:14%;} th.cRev,td.cRev{width:7%;text-align:center;}
+  thead th.cRev{text-align:center;}
+  tbody td{padding:10px 14px;font-size:15px;vertical-align:middle;background:linear-gradient(180deg,#1a2138 0%,#10162a 100%);border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(0,0,0,.55);}
+  tbody tr td:first-child{border-left:1px solid rgba(255,255,255,.16);border-top-left-radius:999px;border-bottom-left-radius:999px;}
+  tbody tr td:last-child{border-right:1px solid rgba(0,0,0,.55);border-top-right-radius:14px;border-bottom-right-radius:14px;}
+  tbody tr:nth-child(even) td{background:linear-gradient(180deg,#222a44 0%,#141a30 100%);}
+  tbody tr.reviewed td{background:linear-gradient(180deg,#1f9e2c 0%,#0d5e17 100%)!important;color:#fff;}
+  tbody tr.newrow td{background:linear-gradient(180deg,#0e4d49 0%,#072e2b 100%)!important;border-color:var(--teal);}
+
+  /* Question # cell */
+  .qcell{display:flex;align-items:center;gap:10px;}
+  .qnum{font-family:'Press Start 2P';font-size:9px;color:var(--gold);text-shadow:1px 1px 0 #000;white-space:nowrap;display:inline-block;min-width:122px;}
+  td.cQ{overflow:hidden;}
+  .bm-btn{flex:none;width:16px;height:20px;cursor:pointer;background:#69718c;
+    clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);box-shadow:0 0 0 1px #000;transition:background .12s;}
+  .bm-btn.on{background:linear-gradient(180deg,#e2102e,#8a0a1f);}
+
+  .qtype{font-family:'Jersey 15',sans-serif;font-size:19px;line-height:1.05;color:#7fd1ff;text-shadow:2px 2px 0 #000;letter-spacing:.5px;}
+  .stim{font-family:'VT323',monospace;font-size:18px;line-height:1;color:#d7e0f2;text-shadow:1px 1px 0 #000;}
+
+  /* retro pixel-cut stars */
+  .stars{display:flex;gap:3px;align-items:center;}
+  .star{width:15px;height:15px;background:var(--gold);clip-path:polygon(50% 0,63% 33%,99% 35%,70% 58%,81% 93%,50% 71%,19% 93%,30% 58%,1% 35%,37% 33%);filter:drop-shadow(1px 1px 0 #000) drop-shadow(-1px 0 0 #000);}
+  .star.off{background:#3c466b;filter:none;}
+  .nodiff{color:var(--muted);font-style:italic;font-size:13px;}
+
+  /* Time column — actual vs target (delta colored) */
+  .tm{font-family:'Share Tech Mono',monospace;font-size:13px;line-height:1.2;color:#cdd6ee;display:block;}
+  .tm.delta{font-size:11px;margin-top:2px;}
+  .tm.over{color:#ff6b6b;} .tm.under{color:#46e06a;}
+  .tm.muted{color:var(--muted);font-style:italic;}
+  .tm.ranout{color:#ff9a6b;font-style:italic;}
+  .tm.empty{color:var(--muted);}
+
+  /* terminal-style coding font for the long free-text columns; word-boundary […] truncation */
+  .tcell .txt{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;color:#dfe7f5;font-family:'Share Tech Mono',monospace;font-size:13px;line-height:1.32;cursor:pointer;}
+  .tcell .txt.empty{color:var(--muted);font-style:italic;font-family:'Saira Condensed',sans-serif;}
+  /* Reason Missed: coding font, up to 5 lines / ~150 chars, row-cycling text color */
+  td.cReason .txt{-webkit-line-clamp:5;}
+  tbody tr:nth-child(3n+1) td.cReason .txt:not(.empty){color:var(--rm-green);}
+  tbody tr:nth-child(3n+2) td.cReason .txt:not(.empty){color:var(--rm-red);}
+  tbody tr:nth-child(3n)   td.cReason .txt:not(.empty){color:var(--rm-blue);}
+  tbody tr.reviewed td.cReason .txt{color:#eafff0!important;}
+
+  /* Reviewed circle button — state shown by OUTER BORDER colour (no inner disc) */
+  .rev{width:30px;height:30px;border-radius:50%;margin:0 auto;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Russo One';font-size:15px;color:#9fb0d8;
+    background:#0c1322;border:2px solid #46527a;box-shadow:inset 1px 1px 0 rgba(255,255,255,.12);transition:border-color .12s,color .12s;}
+  tr.reviewed .rev{background:#0c1322;border:3px solid #7CFFA0;color:#7CFFA0;box-shadow:0 0 8px rgba(124,255,160,.55);}
+
+  /* hint bar */
+  #hintbar{display:flex;gap:22px;align-items:center;padding:9px 22px;background:linear-gradient(180deg,#16203a,#0a1124);border-top:2px solid rgba(255,255,255,.12);}
+  .hint{font-family:'Baloo 2';font-weight:700;font-size:13px;color:#cdd6ee;display:flex;align-items:center;gap:8px;}
+  .hint .btn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Russo One';font-size:12px;color:#fff;background:radial-gradient(circle at 35% 30%,#5a6a92,#1a2440);border:1px solid #000;}
+
+  /* dropdown */
+  .dd{position:fixed;z-index:9400;min-width:200px;max-height:300px;overflow:auto;background:linear-gradient(180deg,#16203a,#0a1124);border:2px solid var(--blue-l);border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.7);}
+  .dd .opt{font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.4px;color:#dfe6f5;padding:7px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:9px;}
+  .dd .opt:hover{background:rgba(44,71,196,.4);}
+  .dd .opt .box{width:16px;height:16px;border-radius:4px;border:2px solid #6f7fb0;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;}
+  .dd .opt.sel .box{background:var(--gold);border-color:var(--gold);}
+  .dd.nementry{border-color:var(--teal);}
+
+  /* hover note — minimalist, clean utility font */
+  #hovernote{position:fixed;z-index:9500;max-width:360px;display:none;background:#fbfdff;color:#10151f;border:1px solid #9aa6bd;border-radius:6px;padding:10px 13px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-weight:400;font-size:13.5px;line-height:1.45;box-shadow:0 8px 22px rgba(0,0,0,.5);}
+
+  /* modal popups */
+  #modal{position:fixed;inset:0;z-index:9600;display:none;align-items:center;justify-content:center;background:rgba(2,4,10,.72);}
+  #modal.show{display:flex;}
+  .pop{width:540px;max-width:92vw;background:linear-gradient(180deg,#1a2440,#0b1020);border-radius:16px;overflow:hidden;border:2px solid #2a3656;box-shadow:inset 2px 2px 0 rgba(255,255,255,.18),inset -2px -2px 0 rgba(0,0,0,.6),0 12px 40px rgba(0,0,0,.7);}
+  .pop h2{margin:0;font-family:'Russo One';font-size:18px;letter-spacing:1px;color:#fff;padding:14px 18px;text-shadow:1px 1px 0 #000;background:linear-gradient(180deg,var(--blue-l),var(--blue-d));border-bottom:2px solid #091047;}
+  .pop .body{padding:16px 18px;}
+  .pop textarea{width:100%;min-height:130px;resize:vertical;font-family:'Baloo 2';font-weight:600;font-size:15px;line-height:1.4;color:#10162a;padding:12px;border-radius:10px;border:2px solid #b8860b;background:#fff7df;}
+  .pop .row{display:flex;justify-content:space-between;gap:10px;padding:0 18px 18px;}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ===== SPLASH ===== -->
+  <div id="splash">
+    <div id="pitchWrap"><canvas id="pitch" width="320" height="180" class="pix"></canvas></div>
+    <div id="board">
+      <div id="nameCol"><div class="dot">LSAT</div><div class="dot">JOURNAL</div></div>
+      <div id="scoreCol"><div class="dot" id="d1">3</div><div class="dot" id="d2">9</div></div>
+      <div class="vbar"></div>
+      <div id="timeCol"><div class="dot">DAYS</div><div class="dot">LEFT</div></div>
+    </div>
+  </div>
+  <div id="firstUse">
+    <div class="card">
+      <h3>DAYS UNTIL THE LSAT?</h3>
+      <input id="daysInput" type="number" value="39" min="0" max="999" />
+      <div><button class="btn3 green" id="startBtn" style="margin-top:18px;">KICK OFF ▶</button></div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="app">
+    <div id="topbar">
+      <div style="display:flex;align-items:center;gap:12px;"><div class="crest">LR</div><div class="readout">LR ACCURACY&nbsp;&nbsp;75.0%</div></div>
+      <div class="readout" id="daysReadout">39 DAYS LEFT</div>
+    </div>
+
+    <div id="titleplate">
+      <h1>LSAT REVIEW JOURNAL</h1>
+      <span id="medals"><span class="medal">🥇</span><span class="medal">🥇</span><span class="medal">🥇</span></span>
+      <div id="titleActions">
+        <div class="btn3 maroon" id="addBtn">＋ ADD NEW QUESTION</div>
+        <div class="btn3 purple" id="doneBtn" style="display:none;">✓ ALL DONE</div>
+      </div>
+    </div>
+
+    <div id="filters">
+      <span id="filterLabel">Filters ▸</span>
+      <div class="pill" id="fType">QUESTION TYPE <span class="car">▾</span></div>
+      <div class="pill" id="fStim">STIMULUS TYPE <span class="car">▾</span></div>
+      <div class="pill" id="fDiff">DIFFICULTY <span class="car">▾</span></div>
+      <div class="pill bm" id="fBook">BOOKMARKS <span class="car">🔖</span></div>
+      <div class="pill reset" id="resetBtn">⟳ RESET FILTERS</div>
+    </div>
+
+    <div id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="cQ">QUESTION #</th>
+            <th class="cType">QUESTION TYPE</th>
+            <th class="cStim">STIMULUS TYPE</th>
+            <th class="cDiff">DIFFICULTY</th>
+            <th class="cTime">TIME</th>
+            <th class="cReason bluehdr">REASON MISSED</th>
+            <th class="cExp bluehdr">RIGHT TRACK</th>
+            <th class="cTake bluehdr">TAKEAWAY</th>
+            <th class="cRev greenhdr">REVIEWED?</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+<div id="grid"></div>
+<div id="crt"></div>
+<div id="hovernote"></div>
+<div id="modal"><div class="pop" id="popInner"></div></div>
+
+<script>
+/* ===================== CATEGORY LISTS (from workbook 'Lists' sheet) ===================== */
+const QTYPES=["Flaw","Must Be True","Most Strongly Supported","Main Conclusion","NA","SA","Strengthen","Weaken","RRE","Method of Reasoning","Parallel Reasoning","Parallel Flaw","Principle","Point at Issue","Evaluate the Argument","Argument Part","Must Be False","Miscellaneous"];
+const STYPES=["Link Assumption","Conditional reasoning","Rule-application","Causal reasoning","Phen-hypothesis","Weighing factors","Diagram","Value judgment","Analogy","Sampling","Source attack","Correlation","Part v. whole","Relative v. absolute","Mental state v. reality","Misdirected response","Eliminating options","Quantifier","Math","Lack of support or false conclusion","Causal chain","Sufficiency or Necessary","Internal Contradiction","Bad Authority","Equivocation","Circular Reasoning","False Dichotomy","Time","Miscellaneous"];
+const DIFFS=[1,2,3,4,5];
+
+/* ===================== DATA (rows 51,61,73,225-230 of current.xlsx) =====================
+   NOTE: the `explanation` field powers the "RIGHT TRACK" column (renamed from "Explanation"). */
+let ENTRIES=[
+ {q:"P119.S2.Q12",type:"Most Strongly Supported",stim:"Sampling",diff:null,bookmark:false,reviewed:false,
+  reason:"Must review Foundations module",
+  explanation:"(E) struck me as irrelevant at first. The stimulus says exercise raised body temperature, but it's not a hypothesis — a premise confirms the causal effect of the extra heat: deeper sleep. I was already skeptical, not realizing this was a settled explanation, which is why (E) felt like a trap.",
+  takeaway:"Identify the premises and take them as fact. Recognize the subtle difference between MSS and MBT: for MSS the right AC needn't have 100% support — sometimes judge which competing AC has more support."},
+ {q:"PT150.S2.Q6",type:"Must Be True",stim:"Conditional reasoning",diff:3,bookmark:false,reviewed:false,
+  reason:"Didn't diagram cond reasoning",
+  explanation:"I knew it was a conditional reasoning question, but partly because I was running out of time I figured I could find the answer without diagramming.",
+  takeaway:"Next time I face a conditional reasoning question, I will diagram it."},
+ {q:"PT132.S4.Q5",type:"Weaken",stim:"Correlation",diff:3,bookmark:true,reviewed:false,
+  reason:"Gave in to overthinking",
+  explanation:"Deciding between (B) and (E), I chose (E) thinking it hinted at an alternative explanation (sunscreen users already predisposed to cancer). But the author would note cancer rates are increasing and the preventative effect still didn't appear regardless of predisposition.",
+  takeaway:"Review the difference vs the stretching-joggers problem. For weakeners my brain leaps to a sliver of an alternative explanation even when the AC isn't doing enough by itself."},
+ {q:"PT152.S1.Q5",type:"NA",stim:"Conditional reasoning",diff:2,bookmark:false,reviewed:true,
+  reason:"Didn't diagram cond reasoning",
+  explanation:"Thought I could find the AC without writing a diagram; couldn't do it in my head, flagged it to come back, ran out of time. No answer submitted.",
+  takeaway:"Write the diagram even for early questions. Practice diagramming conditionals a LOT more — it must feel like second nature."},
+ {q:"PT152.S1.Q14",type:"Weaken",stim:"Weighing factors",diff:4,bookmark:false,reviewed:false,
+  reason:"Misread the answer choice",
+  explanation:"We must take the premises as true — the stimulus says the overwhelming majority of bats don't have rabies. (C) disputes the truth of the premise, not the support. The word \"most\" should have been a red flag.",
+  takeaway:"Pay attention when the stimulus mentions trends. Watch range words like \"overwhelming majority\", \"most\", \"some\"."},
+ {q:"PT152.S1.Q20",type:"Principle",stim:"Value judgment",diff:4,bookmark:false,reviewed:false,
+  reason:"Not exact match of stimulus wording and right AC",
+  explanation:"Chose (B) then second-guessed because of \"believe\" (a trap word). Here the officials' belief in their own report isn't a mental-state-vs-reality disconnect. (D) made me assume the reports were modified — the stimulus only said they were inaccurate.",
+  takeaway:""},
+ {q:"PT152.S1.Q21",type:"Flaw",stim:"Link Assumption",diff:5,bookmark:false,reviewed:false,
+  reason:"Misapplied a trick/technique",
+  explanation:"(D) seemed to address the premise, but however extreme, the conclusion is what I must attack. The premise sets up \"inability to produce enough food\" as necessary; the conclusion uses ability to produce food as sufficient.",
+  takeaway:""},
+ {q:"PT152.S1.Q24",type:"Method of Reasoning",stim:"Rule-application",diff:5,bookmark:false,reviewed:false,
+  reason:"Misread the answer choice",
+  explanation:"Heavily considered (E) but it was so convoluted I couldn't translate it to plain English. (D) was simple and seemed accurate if I granted one assumption — which is why it was the trap.",
+  takeaway:"In Q24 of a section, a simple answer like (D) is overwhelmingly a trap. If a late-section answer looks too simple, prefer the cumbersome AC."},
+ {q:"PT152.S1.Q25",type:"Parallel Flaw",stim:"Conditional reasoning",diff:5,bookmark:false,reviewed:false,
+  reason:"Must review Foundations module",
+  explanation:"For Parallel reasoning, diagramming must be more big-picture. Distill the stimulus into a high-level structure in order to match it.",
+  takeaway:"Practice Parallel Reasoning and Parallel Flaw a lot more — they're conditional questions taken to another level."}
+];
+/* Time taken vs target (auto-populated per entry; "(+)" = over target, "(-)" = under) */
+const TIMES={
+ "PT150.S2.Q6":"Untimed",
+ "PT152.S1.Q5":"04:31 (+02:16)",
+ "PT152.S1.Q14":"03:54 (+01:12)",
+ "PT152.S1.Q20":"Ran out of time",
+ "PT152.S1.Q21":"Ran out of time",
+ "PT152.S1.Q24":"Ran out of time",
+ "PT152.S1.Q25":"Ran out of time"
+};
+ENTRIES.forEach(e=>{e.time=TIMES[e.q]||"";});
+
+/* ===================== SPLASH PITCH ANIMATION ===================== */
+(function(){
+  const cv=document.getElementById('pitch'),x=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const blue=[{x:60,y:60},{x:90,y:120},{x:140,y:90},{x:120,y:40}];
+  const red=[{x:200,y:70},{x:230,y:120},{x:180,y:140},{x:250,y:60}];
+  let ball={x:140,y:90,tx:200,ty:70},t=0;
+  const drift=p=>{p.x+=Math.sin(t/22+p.y)*0.5;p.y+=Math.cos(t/26+p.x)*0.4;};
+  function field(){for(let i=0;i<8;i++){x.fillStyle=i%2?'#2e7d32':'#276b2b';x.fillRect(i*(W/8),0,W/8,H);}x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=2;x.strokeRect(8,8,W-16,H-16);x.beginPath();x.moveTo(W/2,8);x.lineTo(W/2,H-8);x.stroke();x.beginPath();x.arc(W/2,H/2,26,0,7);x.stroke();}
+  const pl=(p,c1,c2)=>{x.fillStyle=c2;x.fillRect(p.x-3,p.y-1,6,6);x.fillStyle=c1;x.fillRect(p.x-3,p.y-6,6,5);};
+  function loop(){t++;field();blue.forEach(drift);red.forEach(drift);ball.x+=(ball.tx-ball.x)*0.06;ball.y+=(ball.ty-ball.y)*0.06;if(Math.abs(ball.x-ball.tx)<3&&Math.abs(ball.y-ball.ty)<3){const all=blue.concat(red),tg=all[(Math.random()*all.length)|0];ball.tx=tg.x;ball.ty=tg.y;}blue.forEach(p=>pl(p,'#fff','#1a2f8f'));red.forEach(p=>pl(p,'#c8102e','#7a0a1c'));x.fillStyle='#ff0';x.fillRect(ball.x-2,ball.y-2,4,4);requestAnimationFrame(loop);}
+  loop();
+})();
+
+/* ===================== FLOW ===================== */
+const splash=document.getElementById('splash'),app=document.getElementById('app'),firstUse=document.getElementById('firstUse');
+function setDays(n){const s=String(n).padStart(2,'0');document.getElementById('d1').textContent=s[0];document.getElementById('d2').textContent=s[1]||s[0];document.getElementById('daysReadout').textContent=n+' DAYS LEFT';}
+document.getElementById('startBtn').onclick=()=>{const n=parseInt(document.getElementById('daysInput').value||'39',10);setDays(n);firstUse.style.display='none';setTimeout(()=>{splash.classList.add('hide');setTimeout(()=>{splash.style.display='none';app.classList.add('show');},600);},3000);};
+
+/* ===================== FILTER STATE ===================== */
+const filters={type:new Set(),stim:new Set(),diff:new Set(),bookmark:false};
+function matches(e){
+  if(filters.bookmark && !e.bookmark) return false;
+  if(filters.type.size && !filters.type.has(e.type)) return false;
+  if(filters.stim.size && !filters.stim.has(e.stim)) return false;
+  if(filters.diff.size && !filters.diff.has(String(e.diff))) return false;
+  return true;
+}
+function refreshFilterBadges(){
+  const set=(id,s)=>{const el=document.getElementById(id);el.querySelector('.count')?.remove();if(s.size){const b=document.createElement('span');b.className='count';b.textContent=s.size;el.appendChild(b);}};
+  set('fType',filters.type);set('fStim',filters.stim);set('fDiff',filters.diff);
+  document.getElementById('fBook').classList.toggle('on',filters.bookmark);
+}
+
+/* ===================== RENDER ===================== */
+const tbody=document.getElementById('tbody');
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return esc(s).replace(/"/g,'&quot;');}
+function stars(d){let h='';for(let i=1;i<=5;i++)h+=`<span class="star ${i<=d?'':'off'}"></span>`;return h;}
+/* truncate at a word boundary and append a bracketed ellipsis […] (never mid-word) */
+function truncWords(s,max){s=(s||'').trim();if(s.length<=max)return s;let cut=s.slice(0,max);const sp=cut.lastIndexOf(' ');if(sp>max*0.5)cut=cut.slice(0,sp);cut=cut.replace(/[\s.,;:—-]+$/,'');return cut+' […]';}
+function tcell(cls,txt,max){const disp=txt?esc(truncWords(txt,max)):'—';return `<td class="${cls} tcell"><span class="txt ${txt?'':'empty'}" data-full="${escAttr(txt||'')}">${disp}</span></td>`;}
+function timeCell(t){
+  t=(t||'').trim();
+  if(!t) return `<td class="cTime"><span class="tm empty">—</span></td>`;
+  if(/^untimed$/i.test(t)) return `<td class="cTime"><span class="tm muted">Untimed</span></td>`;
+  if(/ran out/i.test(t)) return `<td class="cTime"><span class="tm ranout">Ran out</span></td>`;
+  const m=t.match(/^(.*?)\s*\(([+\-−][^)]*)\)\s*$/);
+  if(m){const over=/\+/.test(m[2]);return `<td class="cTime"><span class="tm">${esc(m[1])}</span><span class="tm delta ${over?'over':'under'}">${esc(m[2])}</span></td>`;}
+  return `<td class="cTime"><span class="tm">${esc(t)}</span></td>`;
+}
+function render(){
+  const list=ENTRIES.filter(matches);
+  tbody.innerHTML='';
+  list.forEach(e=>{
+    const i=ENTRIES.indexOf(e);
+    const tr=document.createElement('tr');
+    if(e.reviewed) tr.classList.add('reviewed');
+    tr.innerHTML=`
+      <td class="cQ"><div class="qcell"><span class="qnum">${esc(e.q)}</span><span class="bm-btn ${e.bookmark?'on':''}" data-bm="${i}" title="Bookmark"></span></div></td>
+      <td class="cType"><span class="qtype">${esc(e.type)}</span></td>
+      <td class="cStim"><span class="stim">${esc(e.stim)}</span></td>
+      <td class="cDiff">${e.diff?`<span class="stars">${stars(e.diff)}</span>`:`<span class="nodiff">— not rated —</span>`}</td>
+      ${timeCell(e.time)}
+      ${tcell('cReason',e.reason,150)}
+      ${tcell('cExp',e.explanation,150)}
+      ${tcell('cTake',e.takeaway,150)}
+      <td class="cRev"><div class="rev" data-rev="${i}">${e.reviewed?'✓':''}</div></td>`;
+    tbody.appendChild(tr);
+  });
+  wire();
+}
+function wire(){
+  document.querySelectorAll('[data-bm]').forEach(el=>el.onclick=ev=>{ev.stopPropagation();const i=+el.dataset.bm;ENTRIES[i].bookmark=!ENTRIES[i].bookmark;render();});
+  document.querySelectorAll('[data-rev]').forEach(el=>el.onclick=ev=>{ev.stopPropagation();const i=+el.dataset.rev;ENTRIES[i].reviewed=!ENTRIES[i].reviewed;render();});
+  document.querySelectorAll('.tcell .txt').forEach(el=>{
+    const full=el.dataset.full||'';
+    el.addEventListener('mousemove',ev=>{if(!full)return;hn.textContent=full;hn.style.display='block';let nx=ev.clientX+16,ny=ev.clientY+16;if(nx+360>innerWidth)nx=innerWidth-370;if(ny+140>innerHeight)ny=ev.clientY-140;hn.style.left=nx+'px';hn.style.top=ny+'px';});
+    el.addEventListener('mouseleave',()=>hn.style.display='none');
+  });
+}
+const hn=document.getElementById('hovernote');
+
+/* ===================== DROPDOWN (multi for filters, single for new entry) ===================== */
+let openDD=null;
+function closeDD(){if(openDD){openDD.remove();openDD=null;document.removeEventListener('mousedown',outside,true);}}
+function outside(ev){if(openDD && !openDD.contains(ev.target)) closeDD();}
+function showDropdown(anchor,items,{multi,selectedSet,onToggle,onPick,teal}){
+  closeDD();
+  const dd=document.createElement('div');dd.className='dd'+(teal?' nementry':'');
+  items.forEach(it=>{
+    const label=String(it);
+    const o=document.createElement('div');o.className='opt'+(multi&&selectedSet&&selectedSet.has(label)?' sel':'');
+    o.innerHTML=multi?`<span class="box">${selectedSet&&selectedSet.has(label)?'✓':''}</span>${esc(label)}`:`<span>${esc(label)}</span>`;
+    o.onclick=ev=>{ev.stopPropagation();
+      if(multi){if(selectedSet.has(label)){selectedSet.delete(label);o.classList.remove('sel');o.querySelector('.box').textContent='';}else{selectedSet.add(label);o.classList.add('sel');o.querySelector('.box').textContent='✓';}onToggle&&onToggle();}
+      else{closeDD();onPick&&onPick(label);}
+    };
+    dd.appendChild(o);
+  });
+  document.body.appendChild(dd);
+  const r=anchor.getBoundingClientRect();
+  dd.style.left=Math.min(r.left,innerWidth-dd.offsetWidth-10)+'px';
+  dd.style.top=(r.bottom+6)+'px';
+  if(r.bottom+dd.offsetHeight>innerHeight) dd.style.top=(r.top-dd.offsetHeight-6)+'px';
+  openDD=dd;
+  setTimeout(()=>document.addEventListener('mousedown',outside,true),0);
+}
+
+/* filter buttons */
+function bindFilter(id,key,items){
+  document.getElementById(id).onclick=function(){
+    if(document.body.classList.contains('nem'))return;
+    showDropdown(this,items,{multi:true,selectedSet:filters[key],onToggle:()=>{refreshFilterBadges();render();}});
+  };
+}
+bindFilter('fType','type',QTYPES);
+bindFilter('fStim','stim',STYPES);
+/* difficulty: multi-select 1-5 (stored as strings to match render) */
+document.getElementById('fDiff').onclick=function(){
+  if(document.body.classList.contains('nem'))return;
+  showDropdown(this,DIFFS,{multi:true,selectedSet:filters.diff,onToggle:()=>{refreshFilterBadges();render();}});
+};
+document.getElementById('fBook').onclick=function(){if(document.body.classList.contains('nem'))return;filters.bookmark=!filters.bookmark;refreshFilterBadges();render();};
+document.getElementById('resetBtn').onclick=function(){if(document.body.classList.contains('nem'))return;filters.type.clear();filters.stim.clear();filters.diff.clear();filters.bookmark=false;refreshFilterBadges();render();};
+
+/* ===================== MODAL POPUPS ===================== */
+const modal=document.getElementById('modal'),popInner=document.getElementById('popInner');
+function promptPopup(title,onSubmit,onSkip){
+  popInner.innerHTML=`<h2>${esc(title)}</h2><div class="body"><textarea id="ptxt" placeholder="Type your answer…"></textarea></div>
+    <div class="row"><div class="btn3 grey" id="pskip">SKIP</div><div class="btn3 green" id="psub">SUBMIT ▶</div></div>`;
+  modal.classList.add('show');
+  const ta=document.getElementById('ptxt');setTimeout(()=>ta.focus(),30);
+  document.getElementById('psub').onclick=()=>{const v=ta.value.trim();modal.classList.remove('show');onSubmit(v);};
+  document.getElementById('pskip').onclick=()=>{modal.classList.remove('show');onSkip();};
+}
+function choicePopup(title,leftLabel,rightLabel,onLeft,onRight){
+  popInner.innerHTML=`<h2>${esc(title)}</h2><div class="body" style="text-align:center;color:#cdd6ee;font-family:'Baloo 2';font-weight:700;">Entry saved.</div>
+    <div class="row"><div class="btn3 blue" id="cl">${esc(leftLabel)}</div><div class="btn3 purple" id="cr">${esc(rightLabel)}</div></div>`;
+  modal.classList.add('show');
+  document.getElementById('cl').onclick=()=>{modal.classList.remove('show');onLeft();};
+  document.getElementById('cr').onclick=()=>{modal.classList.remove('show');onRight();};
+}
+
+/* ===================== NEW ENTRY MODE ===================== */
+const addBtn=document.getElementById('addBtn'),doneBtn=document.getElementById('doneBtn');
+let draft=null;
+function enterNEM(){document.body.classList.add('nem');addBtn.style.display='none';doneBtn.style.display='inline-block';newBlankRow();}
+function exitNEM(){document.body.classList.remove('nem');addBtn.style.display='inline-block';doneBtn.style.display='none';draft=null;render();}
+addBtn.onclick=enterNEM;
+doneBtn.onclick=exitNEM;
+
+function newBlankRow(){
+  draft={q:"",type:"",stim:"",diff:null,reason:"",explanation:"",takeaway:"",bookmark:false,reviewed:false};
+  render();
+  const tr=document.createElement('tr');tr.className='newrow';
+  tr.innerHTML=`
+    <td class="cQ"><div class="qcell"><input id="qInput" placeholder="PT___.S_.Q__" style="width:150px;font-family:'Press Start 2P';font-size:10px;background:#000;color:var(--gold);border:1px solid var(--teal);border-radius:5px;padding:6px;"></div></td>
+    <td class="cType"><span class="qtype" id="ndType" style="cursor:pointer;color:#7fd1ff;">▾ pick</span></td>
+    <td class="cStim"><span class="stim" id="ndStim" style="cursor:pointer;">▾ pick</span></td>
+    <td class="cDiff"><span id="ndDiff" style="cursor:pointer;color:var(--gold);font-family:'Russo One';">▾ pick</span></td>
+    <td class="cTime"><span class="tm muted">— auto —</span></td>
+    <td class="cReason tcell"><span class="txt empty">—</span></td>
+    <td class="cExp tcell"><span class="txt empty">—</span></td>
+    <td class="cTake tcell"><span class="txt empty">—</span></td>
+    <td class="cRev"><div class="rev"></div></td>`;
+  tbody.appendChild(tr);
+  tr.scrollIntoView({block:'nearest'});
+  const qi=document.getElementById('qInput');qi.focus();
+  qi.onkeydown=ev=>{if(ev.key==='Enter'){draft.q=qi.value.trim()||'(new)';stepType(tr);}};
+}
+function stepType(tr){
+  const a=document.getElementById('ndType');
+  showDropdown(a,QTYPES,{multi:false,teal:true,onPick:v=>{draft.type=v;a.textContent=v;stepStim(tr);}});
+}
+function stepStim(tr){
+  const a=document.getElementById('ndStim');
+  showDropdown(a,STYPES,{multi:false,teal:true,onPick:v=>{draft.stim=v;a.textContent=v;stepDiff(tr);}});
+}
+function stepDiff(tr){
+  const a=document.getElementById('ndDiff');
+  showDropdown(a,DIFFS,{multi:false,teal:true,onPick:v=>{draft.diff=+v;a.innerHTML=`<span class="stars">${stars(+v)}</span>`;stepReason();}});
+}
+function stepReason(){promptPopup("What made you choose this answer?",v=>{draft.reason=v;stepExp();},()=>{draft.reason="";stepExp();});}
+function stepExp(){promptPopup("What makes the correct answer right? (Right Track)",v=>{draft.explanation=v;stepTake();},()=>{draft.explanation="";stepTake();});}
+function stepTake(){promptPopup("What's the plan to get it right next time?",v=>{draft.takeaway=v;finishEntry();},()=>{draft.takeaway="";finishEntry();});}
+function finishEntry(){
+  ENTRIES.push(draft);draft=null;
+  choicePopup("Question added!","＋ ADD ANOTHER QUESTION","✓ ALL DONE",()=>{newBlankRow();},()=>{exitNEM();});
+}
+
+/* ===================== INIT ===================== */
+refreshFilterBadges();
+render();
+</script>
+</body>
+</html>
